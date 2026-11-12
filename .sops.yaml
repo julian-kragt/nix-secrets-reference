@@ -1,0 +1,23 @@
+# sops configuration: which age recipients can decrypt which file.
+#
+# This file is empty on purpose. nixos-installer writes it for each host it
+# installs, and a hand-written one follows the same shape. For a host `example`
+# with one user `alice` it looks like this (recipients shortened):
+#
+# keys:
+#   - &host_example age1...            # the host's own age key
+#   - &user_alice_example age1...      # alice's age key on that host
+# creation_rules:
+#   - path_regex: ^hosts/example\.yaml$
+#     key_groups:
+#       - age:
+#           - *host_example
+#   - path_regex: ^host-users/example-alice\.yaml$
+#     key_groups:
+#       - age:
+#           - *host_example
+#           - *user_alice_example
+#
+# Rules: one rule per file, anchored at both ends; a host file goes to the host
+# only, a user file to the host and that user's key on that host. sops uses the
+# first rule that matches, so no rule may match another file. See DESIGN.md.
