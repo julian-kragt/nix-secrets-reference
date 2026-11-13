@@ -6,7 +6,7 @@ flake that reads them with [sops-nix](https://github.com/Mic92/sops-nix).
 
 This is a public copy of the layout, the templates, the tooling and the documentation. The real repository is
 private and holds encrypted files under `hosts/` and `host-users/`; here those directories are empty and `.sops.yaml`
-lists no recipients.
+lists no recipients. Where the files go is declared in the flake's `secretsEntry` output, so the layout below can be changed there.
 
 It belongs with:
 
@@ -25,25 +25,30 @@ How it is put together, and why, is in [DESIGN.md](DESIGN.md).
 hosts/<host>.yaml               a host's own secrets            → the host's key
 host-users/<host>-<user>.yaml   a user's secrets on one host    → the host's key + the user's key on that host
 templates/host.yaml             schema of a host file
-templates/user.yaml             schema of a user file
-flake.nix                       dev shell: age, sops, mkpasswd, just
+templates/user.yaml             schema of a per-host user file
+users/<user>.yaml               a user's secrets on all their hosts (userMode "shared" or "both", sharedUserPath = "users")
+templates/shared-user.yaml      schema of a shared user file (sharedUserTemplatePath)
+flake.nix                       secretsEntry, the layout (user mode, directories, templates); installerSecretsData,
+                                its checked form; dev shell: age, sops, mkpasswd, just
 justfile                        editing, rekeying and key recipes
 ```
 
 ## Using it for your own secrets
 
 1. Copy this repository (not a fork: fork visibility follows this one) and make the copy **private**.
-2. Edit `templates/` to hold the keys your configuration reads. A leaf named `hashedPassword` is asked for as a
+2. Choose the user mode and directories in `secretsEntry` in `flake.nix` (DESIGN.md explains the modes), and check it with
+   `nix eval --json .#installerSecretsData`. Edit `templates/` to hold the keys your configuration reads. A leaf named `hashedPassword` is asked for as a
    password and stored as a crypt hash; a leaf that is empty or `CHANGEME` is filled in by hand; anything else is kept.
 3. Point your configuration's flake input at it, for example:
    ```nix
    inputs.nix-secrets = {
      url = "git+ssh://git@github.com/<you>/nix-secrets.git?ref=main&shallow=1";
-     flake = false;
+     inputs.nixpkgs.follows = "nixpkgs";
+     inputs.nixos-bootstrap.follows = "nixos-bootstrap";
    };
    ```
-   and read `"${inputs.nix-secrets}/hosts/${hostName}.yaml"` and
-   `"${inputs.nix-secrets}/host-users/${hostName}-${user}.yaml"` from sops-nix (see DESIGN.md for the full setup).
+   and read the paths from the layout with nixos-bootstrap's `lib.secretsLayout { inherit lib; secretsFlake = inputs.nix-secrets; }`
+   (`hostFile`, `homeFile`, `passwordFile`; see DESIGN.md for the full setup).
 4. Install hosts with nixos-installer: it creates each host's and user's age key on the target, writes their
    recipients and rules into `.sops.yaml`, lets you fill in the templates, and commits and pushes the encrypted files.
 
@@ -68,6 +73,7 @@ Every file is encrypted only to keys that live on its own host, so it is decrypt
 ```sh
 just edit-host <host>              # on the host, as root
 just edit-host-user <host> <user>  # on the host, as that user
+just edit-shared-user <user>       # on any of the user's hosts, as that user
 just rekey <host>                  # on the host, as root, after changing .sops.yaml
 ```
 
