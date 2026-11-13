@@ -1,12 +1,27 @@
 {
   "nodes": {
+    "nixos-bootstrap": {
+      "locked": {
+        "lastModified": 1794500217,
+        "narHash": "sha256-NIjDKrGFWU7K36lUTSqg2G2EuxkfNRQ5yQskLaDlws8=",
+        "owner": "julian-kragt",
+        "repo": "nixos-bootstrap",
+        "rev": "546819b18af57e8e9e16fa36c0c402996ddeb859",
+        "type": "github"
+      },
+      "original": {
+        "owner": "julian-kragt",
+        "repo": "nixos-bootstrap",
+        "type": "github"
+      }
+    },
     "nixpkgs": {
       "locked": {
-        "lastModified": 1777954456,
-        "narHash": "sha256-hGdgeU2Nk87RAuZyYjyDjFL6LK7dAZN5RE9+hrDTkDU=",
+        "lastModified": 1794386569,
+        "narHash": "sha256-x9sADJvoVG0L6RejZB+/BB4YiGZFBZrfTlhF4uBq1tQ=",
         "owner": "NixOS",
         "repo": "nixpkgs",
-        "rev": "549bd84d6279f9852cae6225e372cc67fb91a4c1",
+        "rev": "d4f25a3e562008648d45bcf2d70bcc7422cad84e",
         "type": "github"
       },
       "original": {
@@ -18,6 +33,7 @@
     },
     "root": {
       "inputs": {
+        "nixos-bootstrap": "nixos-bootstrap",
         "nixpkgs": "nixpkgs"
       }
     }
